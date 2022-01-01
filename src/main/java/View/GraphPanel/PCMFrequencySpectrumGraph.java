@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PCMFrequencySpectrumGraph extends AbstractAnalyzedPCMGraph {
-    private List<FrequencySpectrum> frequencySpectra;
+    private final List<FrequencySpectrum> frequencySpectra;
     //private List<Path2D> frequencySpectra;
 
     public PCMFrequencySpectrumGraph() {

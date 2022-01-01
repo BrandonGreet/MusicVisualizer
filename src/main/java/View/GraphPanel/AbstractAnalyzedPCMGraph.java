@@ -8,7 +8,7 @@ abstract class AbstractAnalyzedPCMGraph extends AbstractGraphPanel {
 
     @Override
     protected double getYInterval() {
-        return (height - 2 * MARGIN) / MAX;
+        return 0.2;
     }
 
     @Override
