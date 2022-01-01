@@ -2,13 +2,8 @@ package View.GraphPanel;
 
 abstract class AbstractRawPCMGraph extends AbstractGraphPanel {
     @Override
-    protected double getXInterval() {
-        return (width - 2 * MARGIN) / (values.length - 1);
-    }
-
-    @Override
     protected double getYInterval() {
-        return (height - 2 * MARGIN) / MAX;
+        return (height / 2.0 - MARGIN) / getMax();
     }
 
     @Override

@@ -4,10 +4,7 @@ import Model.FrequencySpectrum;
 import Model.IAudioData;
 import Model.RawAudioSamples;
 import View.*;
-import View.GraphPanel.AbstractGraphPanel;
-import View.GraphPanel.PCMFrequencySpectrumGraph;
-import View.GraphPanel.RawPCMDotsGraph;
-import View.GraphPanel.RawPCMLineGraph;
+import View.GraphPanel.*;
 import org.apache.commons.cli.*;
 
 import javax.sound.sampled.*;
@@ -19,19 +16,39 @@ import java.nio.ByteOrder;
 
 public class MusicVisualizer {
     private static final String FILE = "file";
+    private static final String TYPE = "type";
 
     public static void main(String[] args) {
-        Options options = makeOptions(); // TODO add graph options
+        Options options = makeOptions();
         CommandLine cmd = parseCommandLine(options, args);
 
-        AbstractGraphPanel panel = new PCMFrequencySpectrumGraph();
-        panel.setValues(new FrequencySpectrum(new short[0]));
+        File wavFile = new File(cmd.getOptionValue(FILE));
+        RenderType type = RenderType.valueOf(cmd.getOptionValue(TYPE));
+
+        AbstractGraphPanel panel = null;
+        switch (type) {
+            case PCMFrequencySpectrum:
+                panel = new PCMFrequencySpectrumGraph();
+                break;
+            case RawPCMAmplitude:
+                panel = new RawPCMAmplitudeGraph();
+                break;
+            case RawPCMDots:
+                panel = new RawPCMDotsGraph();
+                break;
+            case RawPCMLine:
+                panel = new RawPCMLineGraph();
+                break;
+            default:
+                showUsageAndExit(options, 3);
+                break;
+        }
+
+        panel.setData(new FrequencySpectrum(new short[0]));
         JFrame frame = new VisualizerFrame();
         frame.add(panel);
 
-        String filename = cmd.getOptionValue(FILE);
         try {
-            File wavFile = new File(filename);
             AudioInputStream ais = AudioSystem.getAudioInputStream(wavFile);
             SourceDataLine audioOut = AudioSystem.getSourceDataLine(ais.getFormat());
 
@@ -62,8 +79,20 @@ public class MusicVisualizer {
                     samples[i] = data.getShort(j);
                     j += frameSize;
                 }
-                IAudioData audioData = new FrequencySpectrum(samples);
-                panel.setValues(audioData);
+
+                IAudioData audioData = null;
+                switch(type) {
+                    case PCMFrequencySpectrum:
+                        audioData = new FrequencySpectrum(samples);
+                        break;
+                    case RawPCMAmplitude:
+                    case RawPCMDots:
+                    case RawPCMLine:
+                        audioData = new RawAudioSamples(samples);
+                        break;
+                }
+
+                panel.setData(audioData);
                 panel.repaint();
                 audioOut.write(data.array(), 0, numBytesRead);
 
@@ -101,11 +130,15 @@ public class MusicVisualizer {
      * @return Command Line Options
      */
     private static Options makeOptions() {
-        Option file = new Option(FILE.substring(0,1), FILE, true, "MIDI File");
+        Option file = new Option(FILE.substring(0, 1), FILE, true, "Audio file to visualize");
         file.setRequired(true);
+
+        Option type = new Option(TYPE.substring(0, 1), TYPE, true, "Render method");
+        type.setRequired(true);
 
         Options options = new Options();
         options.addOption(file);
+        options.addOption(type);
 
         return options;
     }

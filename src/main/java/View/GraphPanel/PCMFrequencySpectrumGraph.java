@@ -4,14 +4,12 @@ import Model.FrequencySpectrum;
 import Model.IAudioData;
 
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PCMFrequencySpectrumGraph extends AbstractAnalyzedPCMGraph {
     private final List<FrequencySpectrum> frequencySpectra;
-    //private List<Path2D> frequencySpectra;
 
     public PCMFrequencySpectrumGraph() {
         super();
@@ -25,13 +23,13 @@ public class PCMFrequencySpectrumGraph extends AbstractAnalyzedPCMGraph {
         Graphics2D g2D = (Graphics2D) g;
 
         for (int i = 0; i < frequencySpectra.size(); i++) {
-            double[] data = frequencySpectra.get(i).getData();
+            double[] data = frequencySpectra.get(frequencySpectra.size() - 1 - i).getData();
 
             for (int j = 0; j < data.length; j++) {
                 double x = MARGIN + j * xInterval;
-                double y = zeroHeight - i * yInterval * 10;
+                double y = zeroHeight - i * yInterval;
 
-                if (data[j] < 0.005) {
+                /*if (data[j] < 0.005) {
                     g2D.setColor(Color.blue);
                 } else if (data[j] < 0.01) {
                     g2D.setColor(Color.green);
@@ -41,22 +39,36 @@ public class PCMFrequencySpectrumGraph extends AbstractAnalyzedPCMGraph {
                     g2D.setColor(Color.white);
                 } else {
                     g2D.setColor(Color.red);
-                }
+                }*/
+                //TODO: Accurately compute color
+                g2D.setColor(new Color((int) data[j]));
 
-                g2D.fill(new Ellipse2D.Double(x, y,1,1));
+                g2D.fill(new Rectangle2D.Double(x, y, xInterval, yInterval));
             }
         }
     }
 
     @Override
-    public void setValues(IAudioData data) {
+    public void setData(IAudioData data) {
         if (!(data instanceof FrequencySpectrum)) throw new IllegalArgumentException();
         this.frequencySpectra.add((FrequencySpectrum) data);
-        this.values = data.getData();
-        /*Path2D spectrum = new Path2D.Double();
-        spectrum.moveTo(MARGIN, zeroHeight);
-        for (int i = 0; i < data.getData().length; i++) {
-            spectrum.lineTo(MARGIN + i * xInterval, );
-        }*/
+    }
+
+    @Override
+    protected double getMax() {
+        return 0;
+    }
+
+    @Override
+    protected double getXInterval() {
+        return (width - 2 * MARGIN) / 512;
+    }
+
+    @Override
+    protected double getYInterval() {
+        if (frequencySpectra.size() > height - 2 * MARGIN) {
+            return (height - 2 * MARGIN) / frequencySpectra.size();
+        }
+        return 1.0;
     }
 }
